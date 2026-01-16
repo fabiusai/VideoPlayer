@@ -335,6 +335,11 @@
             border-radius: 8px;
             font-size: 12px;
             color: #ccc;
+            display: none;
+        }
+        
+        .buffer-info.active {
+            display: block;
         }
         
         .buffer-bar {
@@ -438,10 +443,6 @@
             font-size: 12px;
         }
         
-        .hidden {
-            display: none !important;
-        }
-        
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -519,7 +520,7 @@
             </div>
             
             <div class="buffer-info" id="bufferInfo">
-                <div>Buffer: <span id="bufferPercent">0%</span></div>
+                <div>Stato connessione: <span id="bufferPercent">0%</span></div>
                 <div class="buffer-bar">
                     <div class="buffer-progress" id="bufferProgress"></div>
                 </div>
@@ -617,6 +618,8 @@
         let isYouTube = false;
         let youtubePlayer = null;
         let youtubeAPILoaded = false;
+        let currentVideoTitle = '';
+        let bufferSimulationInterval = null;
         
         // Gestione background audio per iOS
         let audioContext = null;
@@ -627,19 +630,16 @@
             const urlObj = new URL(url);
             const hostname = urlObj.hostname;
             
-            // Rileva se è un link YouTube (senza mostrarlo all'utente)
+            // Rileva se è un link YouTube
             const isYT = hostname.includes('youtube.com') || hostname.includes('youtu.be');
             
             let sourceName = 'Streaming';
             let title = 'Contenuto Audio';
             
             if (isYT) {
-                sourceName = 'Audio Stream';
-                // Prova ad estrarre info dal video YouTube
-                const videoId = extractVideoId(url);
-                if (videoId) {
-                    title = `Audio #${videoId.substring(0, 8)}`;
-                }
+                sourceName = 'Streaming Audio';
+                // Il titolo verrà ottenuto via API
+                title = 'Caricamento titolo...';
             } else if (hostname.includes('spotify')) {
                 sourceName = 'Streaming Audio';
             } else if (hostname.includes('soundcloud')) {
@@ -656,7 +656,7 @@
             return { isYouTube: isYT, sourceName, title };
         }
         
-        // Estrae ID video da URL YouTube (per uso interno)
+        // Estrae ID video da URL YouTube
         function extractVideoId(url) {
             const patterns = [
                 /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\?\/]+)/,
@@ -672,19 +672,23 @@
             return null;
         }
         
-        // Estrae ID playlist
-        function extractPlaylistId(url) {
-            const patterns = [
-                /(?:youtube\.com\/playlist\?list=|&list=)([^&\?\/]+)/,
-                /youtube\.com\/watch\?.*list=([^&\?\/]+)/
-            ];
-            
-            for (const pattern of patterns) {
-                const match = url.match(pattern);
-                if (match) return match[1];
+        // Ottiene il titolo del video YouTube via API
+        async function getYouTubeVideoTitle(videoId) {
+            try {
+                // Usa l'API oEmbed di YouTube per ottenere il titolo
+                const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+                
+                if (!response.ok) {
+                    throw new Error('Impossibile ottenere informazioni video');
+                }
+                
+                const data = await response.json();
+                return data.title;
+            } catch (error) {
+                console.error('Errore nel recupero titolo:', error);
+                // Fallback: mostra l'ID del video
+                return `Audio #${videoId.substring(0, 8)}`;
             }
-            
-            return null;
         }
         
         // Inizializza AudioContext per iOS
@@ -727,7 +731,7 @@
             }
         }
         
-        // Carica API YouTube (solo se necessario)
+        // Carica API YouTube
         function loadYouTubeAPI() {
             return new Promise((resolve) => {
                 if (youtubeAPILoaded && window.YT && window.YT.Player) {
@@ -756,65 +760,150 @@
             });
         }
         
-        // Riproduce video YouTube tramite iframe nascosto
-        async function playYouTubeVideo(videoId) {
-            return new Promise((resolve, reject) => {
-                // Crea un iframe nascosto per YouTube
-                const iframeContainer = document.createElement('div');
-                iframeContainer.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0.01;pointer-events:none;overflow:hidden;';
-                document.body.appendChild(iframeContainer);
-                
-                youtubePlayer = new YT.Player(iframeContainer, {
-                    height: '1',
-                    width: '1',
-                    videoId: videoId,
-                    playerVars: {
-                        'autoplay': 1,
-                        'controls': 0,
-                        'disablekb': 1,
-                        'fs': 0,
-                        'loop': 0,
-                        'modestbranding': 1,
-                        'playsinline': 1,
-                        'rel': 0,
-                        'showinfo': 0,
-                        'iv_load_policy': 3,
-                        'enablejsapi': 1
-                    },
-                    events: {
-                        'onReady': (event) => {
-                            console.log('Player YouTube pronto (nascosto)');
-                            event.target.setVolume(parseInt(volumeSlider.value));
-                            resolve(event.target);
-                        },
-                        'onStateChange': (event) => {
-                            if (event.data === YT.PlayerState.PLAYING) {
-                                isPlaying = true;
-                                playPauseIcon.className = 'fas fa-pause';
-                                showSuccess('Audio in riproduzione! Puoi bloccare lo schermo.');
-                                initAudioContextForiOS();
-                            } else if (event.data === YT.PlayerState.PAUSED) {
-                                isPlaying = false;
-                                playPauseIcon.className = 'fas fa-play';
-                            } else if (event.data === YT.PlayerState.ENDED) {
-                                isPlaying = false;
-                                playPauseIcon.className = 'fas fa-play';
+        // Simula buffer per YouTube (non disponibile via API)
+        function simulateYouTubeBuffer() {
+            // Ferma simulazione precedente
+            if (bufferSimulationInterval) {
+                clearInterval(bufferSimulationInterval);
+            }
+            
+            let bufferValue = 0;
+            bufferInfo.classList.add('active');
+            
+            bufferSimulationInterval = setInterval(() => {
+                if (isYouTube && youtubePlayer) {
+                    try {
+                        const playerState = youtubePlayer.getPlayerState();
+                        
+                        // Se il video è in riproduzione, mostra buffer "completo"
+                        if (playerState === YT.PlayerState.PLAYING) {
+                            if (bufferValue < 100) {
+                                bufferValue += 20;
+                                if (bufferValue > 100) bufferValue = 100;
                             }
-                        },
-                        'onError': (error) => {
-                            console.error('Errore player YouTube:', error);
-                            reject(new Error('Impossibile caricare il contenuto'));
+                        } 
+                        // Se è in buffering, mostra valori intermedi
+                        else if (playerState === YT.PlayerState.BUFFERING) {
+                            bufferValue = 30 + Math.floor(Math.random() * 40);
                         }
+                        
+                        bufferPercent.textContent = `${bufferValue}%`;
+                        bufferProgress.style.width = `${bufferValue}%`;
+                        
+                        if (bufferValue >= 100) {
+                            bufferText.textContent = 'Streaming ottimale';
+                        } else if (bufferValue > 60) {
+                            bufferText.textContent = 'Streaming fluido';
+                        } else if (bufferValue > 30) {
+                            bufferText.textContent = 'Buffering in corso...';
+                        } else {
+                            bufferText.textContent = 'Connessione in inizializzazione';
+                        }
+                    } catch (e) {
+                        console.error('Errore simulazione buffer:', e);
                     }
-                });
-                
-                setTimeout(() => {
-                    if (youtubePlayer && youtubePlayer.getDuration) {
-                        resolve(youtubePlayer);
+                }
+            }, 1000);
+        }
+        
+        // Aggiorna buffer per contenuti non-YouTube
+        function updateRegularBuffer() {
+            if (!audioElement || isYouTube) return;
+            
+            try {
+                if (audioElement.buffered.length > 0) {
+                    const bufferedEnd = audioElement.buffered.end(audioElement.buffered.length - 1);
+                    const duration = audioElement.duration || 1;
+                    const percent = Math.min(100, (bufferedEnd / duration) * 100);
+                    
+                    bufferPercent.textContent = `${Math.round(percent)}%`;
+                    bufferProgress.style.width = `${percent}%`;
+                    
+                    if (percent >= 100) {
+                        bufferText.textContent = 'Buffer completo - pronto per riproduzione offline';
+                    } else if (percent > 50) {
+                        bufferText.textContent = 'Buffer sufficiente per riproduzione';
                     } else {
-                        reject(new Error('Timeout caricamento'));
+                        bufferText.textContent = `Buffering... ${Math.round(percent)}%`;
                     }
-                }, 5000);
+                }
+            } catch (err) {
+                console.error('Errore buffer:', err);
+            }
+        }
+        
+        // Riproduce video YouTube
+        async function playYouTubeVideo(videoId) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // Ottieni il titolo del video
+                    currentVideoTitle = await getYouTubeVideoTitle(videoId);
+                    trackTitle.textContent = currentVideoTitle;
+                    
+                    // Crea iframe nascosto per YouTube
+                    const iframeContainer = document.createElement('div');
+                    iframeContainer.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0.01;pointer-events:none;overflow:hidden;';
+                    document.body.appendChild(iframeContainer);
+                    
+                    youtubePlayer = new YT.Player(iframeContainer, {
+                        height: '1',
+                        width: '1',
+                        videoId: videoId,
+                        playerVars: {
+                            'autoplay': 1,
+                            'controls': 0,
+                            'disablekb': 1,
+                            'fs': 0,
+                            'loop': 0,
+                            'modestbranding': 1,
+                            'playsinline': 1,
+                            'rel': 0,
+                            'showinfo': 0,
+                            'iv_load_policy': 3,
+                            'enablejsapi': 1
+                        },
+                        events: {
+                            'onReady': (event) => {
+                                console.log('Player YouTube pronto');
+                                event.target.setVolume(parseInt(volumeSlider.value));
+                                simulateYouTubeBuffer(); // Avvia simulazione buffer
+                                resolve(event.target);
+                            },
+                            'onStateChange': (event) => {
+                                if (event.data === YT.PlayerState.PLAYING) {
+                                    isPlaying = true;
+                                    playPauseIcon.className = 'fas fa-pause';
+                                    showSuccess('Audio in riproduzione! Puoi bloccare lo schermo.');
+                                    initAudioContextForiOS();
+                                } else if (event.data === YT.PlayerState.PAUSED) {
+                                    isPlaying = false;
+                                    playPauseIcon.className = 'fas fa-play';
+                                } else if (event.data === YT.PlayerState.ENDED) {
+                                    isPlaying = false;
+                                    playPauseIcon.className = 'fas fa-play';
+                                } else if (event.data === YT.PlayerState.BUFFERING) {
+                                    // Aggiorna stato buffer quando YouTube è in buffering
+                                    bufferText.textContent = 'Buffering in corso...';
+                                }
+                            },
+                            'onError': (error) => {
+                                console.error('Errore player YouTube:', error);
+                                reject(new Error('Impossibile caricare il contenuto'));
+                            }
+                        }
+                    });
+                    
+                    setTimeout(() => {
+                        if (youtubePlayer && youtubePlayer.getDuration) {
+                            resolve(youtubePlayer);
+                        } else {
+                            reject(new Error('Timeout caricamento'));
+                        }
+                    }, 5000);
+                    
+                } catch (err) {
+                    reject(err);
+                }
             });
         }
         
@@ -875,20 +964,24 @@
                 // Salva URL
                 currentUrl = url;
                 
-                // Estrai info (senza mostrare riferimenti a YouTube)
+                // Estrai info
                 const urlInfo = extractUrlInfo(url);
                 isYouTube = urlInfo.isYouTube;
                 
-                // Aggiorna UI con info generiche
+                // Aggiorna UI iniziale
                 trackTitle.textContent = urlInfo.title;
                 sourceText.textContent = urlInfo.sourceName;
+                bufferInfo.classList.add('active');
                 
                 if (isYouTube) {
-                    // Gestione YouTube (nascosta all'utente)
+                    // Gestione YouTube
                     const videoId = extractVideoId(url);
                     if (!videoId) {
                         throw new Error('Link non valido');
                     }
+                    
+                    // Mostra stato caricamento
+                    bufferStatus.textContent = 'Ottenimento informazioni video...';
                     
                     // Carica API YouTube
                     const apiLoaded = await loadYouTubeAPI();
@@ -911,13 +1004,18 @@
                     // Setup event listeners
                     setupAudioElementEvents();
                     
+                    // Mostra stato caricamento
+                    bufferStatus.textContent = 'Caricamento contenuto...';
+                    
                     // Avvia riproduzione
                     await audioElement.play();
+                    
+                    // Avvia monitoraggio buffer reale
+                    audioElement.addEventListener('progress', updateRegularBuffer);
                 }
                 
                 // Mostra controlli
                 playerSection.classList.add('active');
-                bufferInfo.style.display = 'block';
                 showLoading(false);
                 
                 // Avvia aggiornamento UI
@@ -927,6 +1025,7 @@
                 console.error('Errore:', err);
                 showError(err.message || 'Impossibile caricare. Riprova con un altro link.');
                 showLoading(false);
+                bufferInfo.classList.remove('active');
             }
         }
         
@@ -937,7 +1036,6 @@
             });
             
             audioElement.addEventListener('timeupdate', updateProgressUI);
-            audioElement.addEventListener('progress', updateBufferInfo);
             audioElement.addEventListener('ended', () => {
                 isPlaying = false;
                 playPauseIcon.className = 'fas fa-play';
@@ -993,32 +1091,6 @@
                 
                 currentTimeEl.textContent = formatTime(currentTime);
                 durationEl.textContent = formatTime(duration);
-            }
-        }
-        
-        // Aggiorna info buffer
-        function updateBufferInfo() {
-            if (!audioElement || isYouTube) return;
-            
-            try {
-                if (audioElement.buffered.length > 0) {
-                    const bufferedEnd = audioElement.buffered.end(audioElement.buffered.length - 1);
-                    const duration = audioElement.duration || 1;
-                    const percent = Math.min(100, (bufferedEnd / duration) * 100);
-                    
-                    bufferPercent.textContent = `${Math.round(percent)}%`;
-                    bufferProgress.style.width = `${percent}%`;
-                    
-                    if (percent >= 100) {
-                        bufferText.textContent = 'Buffer completo - pronto per riproduzione offline';
-                    } else if (percent > 50) {
-                        bufferText.textContent = 'Buffer sufficiente per riproduzione';
-                    } else {
-                        bufferText.textContent = `Buffering... ${Math.round(percent)}%`;
-                    }
-                }
-            } catch (err) {
-                console.error('Errore buffer:', err);
             }
         }
         
@@ -1124,6 +1196,12 @@
         
         // Stop riproduzione
         function stopPlayback() {
+            // Ferma simulazione buffer
+            if (bufferSimulationInterval) {
+                clearInterval(bufferSimulationInterval);
+                bufferSimulationInterval = null;
+            }
+            
             // Ferma YouTube
             if (youtubePlayer) {
                 try {
@@ -1162,9 +1240,10 @@
             durationEl.textContent = '0:00';
             bufferPercent.textContent = '0%';
             bufferProgress.style.width = '0%';
+            bufferText.textContent = 'Caricamento dati...';
             
             playerSection.classList.remove('active');
-            bufferInfo.style.display = 'none';
+            bufferInfo.classList.remove('active');
             hideSuccess();
         }
         
@@ -1222,7 +1301,6 @@
         // Esempio al focus
         videoUrlInput.addEventListener('focus', () => {
             if (!videoUrlInput.value) {
-                // Link di esempio generici (YouTube incluso ma non menzionato)
                 const sampleUrls = [
                     'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
                     'https://assets.codepen.io/4358584/audio-sample.mp3',
@@ -1234,14 +1312,12 @@
         
         // Inizializzazione
         window.addEventListener('load', () => {
-            // Esempio iniziale
             const sampleUrls = [
                 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
                 'https://assets.codepen.io/4358584/audio-sample.mp3'
             ];
             videoUrlInput.value = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
             
-            // Controlla se è app da Home Screen
             if (window.navigator.standalone === true) {
                 showSuccess('Modalità app attiva! Audio in background abilitato.');
             }
@@ -1253,7 +1329,6 @@
                 console.log('App in background - mantenendo audio');
                 resumeAudioContext();
                 
-                // Forza riproduzione se si era interrotta
                 if (isPlaying) {
                     setTimeout(() => {
                         if (isYouTube && youtubePlayer && youtubePlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
