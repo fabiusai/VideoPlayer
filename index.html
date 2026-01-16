@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Video Player</title>
+    <title>Audio Stream Player</title>
     <link rel="apple-touch-icon" href="video_player_ico.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -50,7 +50,7 @@
         }
         
         h1 i {
-            color: #ff0000;
+            color: #36D1DC;
         }
         
         .input-section {
@@ -109,8 +109,8 @@
         
         input:focus {
             outline: none;
-            border-color: #ff4d4d;
-            box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.2);
+            border-color: #36D1DC;
+            box-shadow: 0 0 0 3px rgba(54, 209, 220, 0.2);
         }
         
         .buttons {
@@ -135,12 +135,12 @@
         }
         
         #playBtn {
-            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            background: linear-gradient(to right, #36D1DC, #5B86E5);
             color: white;
         }
         
         #playBtn:hover {
-            background: linear-gradient(to right, #ff4b2b, #ff416c);
+            background: linear-gradient(to right, #5B86E5, #36D1DC);
             transform: translateY(-2px);
         }
         
@@ -155,12 +155,12 @@
         }
         
         #changeVideoBtn {
-            background: linear-gradient(to right, #36D1DC, #5B86E5);
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
             color: white;
         }
         
         #changeVideoBtn:hover {
-            background: linear-gradient(to right, #5B86E5, #36D1DC);
+            background: linear-gradient(to right, #ff4b2b, #ff416c);
             transform: translateY(-2px);
         }
         
@@ -198,74 +198,67 @@
             -webkit-box-orient: vertical;
         }
         
-        .track-channel {
+        .track-source {
             color: #aaa;
             font-size: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-        
-        .playlist-info {
-            background-color: rgba(40, 40, 62, 0.6);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            display: none;
-        }
-        
-        .playlist-info.active {
-            display: block;
-        }
-        
-        .playlist-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #e0e0ff;
-        }
-        
-        .playlist-track {
-            font-size: 14px;
-            color: #ccc;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px;
-            border-radius: 6px;
-            margin: 5px 0;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .playlist-track:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .playlist-track.active {
-            background-color: rgba(255, 77, 77, 0.2);
-            color: #ff4d4d;
-        }
-        
-        .playlist-track i {
-            font-size: 12px;
-        }
-        
-        .playlist-controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .playlist-controls button {
-            padding: 10px 15px;
-            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .audio-controls {
             display: flex;
             flex-direction: column;
             gap: 20px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #3a3a5d;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #36D1DC, #5B86E5);
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.1s;
+        }
+        
+        .progress-handle {
+            position: absolute;
+            top: -3px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            transform: translateX(-8px);
+            display: none;
+        }
+        
+        .progress-bar:hover .progress-handle {
+            display: block;
+        }
+        
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
         }
         
         .control-buttons {
@@ -295,7 +288,7 @@
         }
         
         .play-pause-btn {
-            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            background: linear-gradient(to right, #36D1DC, #5B86E5);
             width: 70px;
             height: 70px;
             font-size: 32px;
@@ -331,55 +324,34 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #ff4b2b;
+            background: #36D1DC;
             cursor: pointer;
         }
         
-        .youtube-player-container {
+        .buffer-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(40, 40, 62, 0.6);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .buffer-bar {
             width: 100%;
-            height: 0;
-            padding-bottom: 0;
-            overflow: hidden;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        .youtube-player-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .hidden-player {
-            opacity: 0.01;
-            height: 1px;
-            pointer-events: none;
-        }
-        
-        .visible-player {
-            opacity: 1;
-            height: 200px;
-            pointer-events: auto;
-        }
-        
-        .player-toggle {
-            display: flex;
-            justify-content: center;
-            margin: 15px 0;
-        }
-        
-        .toggle-btn {
+            height: 4px;
             background-color: #3a3a5d;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .buffer-progress {
+            height: 100%;
+            background: linear-gradient(to right, #4CAF50, #8BC34A);
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.3s;
         }
         
         .instructions {
@@ -420,7 +392,7 @@
         
         .spinner {
             border: 5px solid rgba(255, 255, 255, 0.1);
-            border-top: 5px solid #ff4b2b;
+            border-top: 5px solid #36D1DC;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -466,6 +438,10 @@
             font-size: 12px;
         }
         
+        .hidden {
+            display: none !important;
+        }
+        
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -477,10 +453,6 @@
             
             .buttons {
                 flex-direction: column;
-            }
-            
-            .visible-player {
-                height: 150px;
             }
             
             .input-with-button {
@@ -496,14 +468,14 @@
 </head>
 <body>
     <div class="container">
-        <h1><i class="fab fa-youtube"></i> YouTube Audio Player</h1>
+        <h1><i class="fas fa-music"></i> Audio Stream Player</h1>
         
         <div class="input-section">
             <div class="input-group">
-                <label for="youtubeUrl"><i class="fas fa-link"></i> Incolla il link di YouTube:</label>
+                <label for="videoUrl"><i class="fas fa-link"></i> Incolla il link audio/video:</label>
                 
                 <div class="input-with-button">
-                    <input type="text" id="youtubeUrl" placeholder="Es: https://www.youtube.com/watch?v=..." autocomplete="off">
+                    <input type="text" id="videoUrl" placeholder="Incolla qui il link..." autocomplete="off">
                     <button class="input-button" id="pasteBtn" title="Incolla link dagli appunti">
                         <i class="fas fa-paste"></i>
                     </button>
@@ -517,7 +489,7 @@
                         <i class="fas fa-play"></i> Riproduci
                     </button>
                     <button id="changeVideoBtn">
-                        <i class="fas fa-sync"></i> Cambia Video
+                        <i class="fas fa-sync"></i> Cambia
                     </button>
                     <button id="stopBtn">
                         <i class="fas fa-stop"></i> Stop
@@ -529,6 +501,7 @@
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <p>Caricamento in corso...</p>
+            <p id="bufferStatus">Preparazione...</p>
         </div>
         
         <div class="error" id="error">
@@ -541,36 +514,30 @@
         
         <div class="player-section" id="playerSection">
             <div class="track-info">
-                <div class="track-title" id="trackTitle">Titolo del video</div>
-                <div class="track-channel" id="trackChannel"><i class="fas fa-user"></i> Canale YouTube</div>
+                <div class="track-title" id="trackTitle">Contenuto Audio</div>
+                <div class="track-source" id="trackSource"><i class="fas fa-headphones"></i> <span id="sourceText">Streaming audio</span></div>
             </div>
             
-            <div class="playlist-info" id="playlistInfo">
-                <div class="playlist-title" id="playlistTitle">Playlist: <span id="playlistName">Nome playlist</span></div>
-                <div id="playlistTracks">
-                    <!-- Le tracce della playlist verranno inserite qui -->
+            <div class="buffer-info" id="bufferInfo">
+                <div>Buffer: <span id="bufferPercent">0%</span></div>
+                <div class="buffer-bar">
+                    <div class="buffer-progress" id="bufferProgress"></div>
                 </div>
-                <div class="playlist-controls">
-                    <button id="prevTrackBtn">
-                        <i class="fas fa-backward"></i> Precedente
-                    </button>
-                    <button id="nextTrackBtn">
-                        <i class="fas fa-forward"></i> Successiva
-                    </button>
-                </div>
-            </div>
-            
-            <div class="youtube-player-container hidden-player" id="youtubePlayerContainer">
-                <!-- L'iframe di YouTube verrà inserito qui -->
-            </div>
-            
-            <div class="player-toggle">
-                <button class="toggle-btn" id="togglePlayerBtn">
-                    <i class="fas fa-eye"></i> Mostra/Nascondi Player
-                </button>
+                <div id="bufferText" style="margin-top: 5px; font-size: 11px;">Caricamento dati...</div>
             </div>
             
             <div class="audio-controls">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress" id="progress"></div>
+                        <div class="progress-handle" id="progressHandle"></div>
+                    </div>
+                    <div class="time-info">
+                        <span id="currentTime">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                </div>
+                
                 <div class="control-buttons">
                     <button class="control-btn" id="skipBack">
                         <i class="fas fa-step-backward"></i>
@@ -591,26 +558,26 @@
         </div>
         
         <div class="instructions">
-            <h3><i class="fas fa-info-circle"></i> Istruzioni IMPORTANTI per iPhone:</h3>
+            <h3><i class="fas fa-info-circle"></i> Istruzioni IMPORTANTI:</h3>
             <ul>
                 <li><strong>Passo 1:</strong> Apri in Safari → "Condividi" → "Aggiungi a Home"</li>
                 <li><strong>Passo 2:</strong> Usa l'app dalla Home Screen (non da Safari!)</li>
-                <li><strong>Nuovo:</strong> Tocca <i class="fas fa-paste"></i> per incollare automaticamente un link</li>
-                <li><strong>Nuovo:</strong> Usa "Cambia Video" per passare a un nuovo video senza riavviare</li>
-                <li><strong>Nuovo:</strong> Supporto per playlist YouTube - riproduci tutte le tracce!</li>
-                <li>Audio continuerà anche con schermo spento</li>
+                <li><strong>Formati supportati:</strong> Link audio, video e streaming</li>
+                <li><strong>Buffering:</strong> L'audio viene bufferizzato per riproduzione offline</li>
+                <li><strong>Scorrimento:</strong> Tocca la barra di progresso per saltare a un punto specifico</li>
+                <li>Audio continuerà anche con schermo spento o in altre app</li>
             </ul>
         </div>
         
         <div class="footer">
-            <p>YouTube Audio Player con supporto playlist e cambio video dinamico</p>
-            <p>Funziona solo se aggiunta alla Home Screen di iOS</p>
+            <p>Audio Stream Player con supporto riproduzione in background</p>
+            <p>Funziona solo se aggiunta alla Home Screen su iPhone</p>
         </div>
     </div>
 
     <script>
         // Elementi DOM
-        const youtubeUrlInput = document.getElementById('youtubeUrl');
+        const videoUrlInput = document.getElementById('videoUrl');
         const pasteBtn = document.getElementById('pasteBtn');
         const clearBtn = document.getElementById('clearBtn');
         const playBtn = document.getElementById('playBtn');
@@ -618,66 +585,78 @@
         const stopBtn = document.getElementById('stopBtn');
         const playerSection = document.getElementById('playerSection');
         const trackTitle = document.getElementById('trackTitle');
-        const trackChannel = document.getElementById('trackChannel');
+        const trackSource = document.getElementById('trackSource');
+        const sourceText = document.getElementById('sourceText');
         const playPauseBtn = document.getElementById('playPauseBtn');
         const playPauseIcon = document.getElementById('playPauseIcon');
         const volumeSlider = document.getElementById('volumeSlider');
         const skipBackBtn = document.getElementById('skipBack');
         const skipForwardBtn = document.getElementById('skipForward');
         const loading = document.getElementById('loading');
+        const bufferStatus = document.getElementById('bufferStatus');
         const error = document.getElementById('error');
         const success = document.getElementById('success');
         const errorText = document.getElementById('errorText');
         const successText = document.getElementById('successText');
-        const youtubePlayerContainer = document.getElementById('youtubePlayerContainer');
-        const togglePlayerBtn = document.getElementById('togglePlayerBtn');
-        const playlistInfo = document.getElementById('playlistInfo');
-        const playlistName = document.getElementById('playlistName');
-        const playlistTracks = document.getElementById('playlistTracks');
-        const prevTrackBtn = document.getElementById('prevTrackBtn');
-        const nextTrackBtn = document.getElementById('nextTrackBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progress = document.getElementById('progress');
+        const progressHandle = document.getElementById('progressHandle');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const bufferInfo = document.getElementById('bufferInfo');
+        const bufferPercent = document.getElementById('bufferPercent');
+        const bufferProgress = document.getElementById('bufferProgress');
+        const bufferText = document.getElementById('bufferText');
         
         // Variabili globali
-        let youtubePlayer = null;
-        let currentVideoId = null;
-        let isPlayerVisible = false;
-        let videoDuration = 0;
+        let audioElement = null;
         let isPlaying = false;
-        let currentPlaylist = null;
-        let currentPlaylistIndex = -1;
+        let currentUrl = '';
+        let isSeeking = false;
+        let updateInterval = null;
+        let isYouTube = false;
+        let youtubePlayer = null;
+        let youtubeAPILoaded = false;
         
-        // Funzione per incollare dagli appunti
-        async function pasteFromClipboard() {
-            try {
-                // Controlla se l'API Clipboard è supportata
-                if (navigator.clipboard && navigator.clipboard.readText) {
-                    const text = await navigator.clipboard.readText();
-                    youtubeUrlInput.value = text;
-                    showSuccess('Link incollato dagli appunti!');
-                } else {
-                    // Fallback per browser che non supportano l'API Clipboard
-                    youtubeUrlInput.focus();
-                    document.execCommand('paste');
-                    showSuccess('Link incollato!');
+        // Gestione background audio per iOS
+        let audioContext = null;
+        let mediaElementSource = null;
+        
+        // Estrae informazioni dal link
+        function extractUrlInfo(url) {
+            const urlObj = new URL(url);
+            const hostname = urlObj.hostname;
+            
+            // Rileva se è un link YouTube (senza mostrarlo all'utente)
+            const isYT = hostname.includes('youtube.com') || hostname.includes('youtu.be');
+            
+            let sourceName = 'Streaming';
+            let title = 'Contenuto Audio';
+            
+            if (isYT) {
+                sourceName = 'Audio Stream';
+                // Prova ad estrarre info dal video YouTube
+                const videoId = extractVideoId(url);
+                if (videoId) {
+                    title = `Audio #${videoId.substring(0, 8)}`;
                 }
-            } catch (err) {
-                console.error('Errore incolla:', err);
-                // Fallback: mostra un prompt
-                const pastedText = prompt('Incolla manualmente il link YouTube qui:');
-                if (pastedText) {
-                    youtubeUrlInput.value = pastedText;
-                    showSuccess('Link incollato!');
-                }
+            } else if (hostname.includes('spotify')) {
+                sourceName = 'Streaming Audio';
+            } else if (hostname.includes('soundcloud')) {
+                sourceName = 'Audio Stream';
+            } else if (url.includes('.m3u8')) {
+                sourceName = 'Stream Live';
+                title = 'Streaming Audio';
+            } else if (url.includes('.mp3') || url.includes('.mp4') || url.includes('.m4a')) {
+                sourceName = 'File Audio';
+                const fileName = url.split('/').pop().split('?')[0];
+                title = fileName.length > 30 ? fileName.substring(0, 30) + '...' : fileName;
             }
+            
+            return { isYouTube: isYT, sourceName, title };
         }
         
-        // Funzione per pulire il campo input
-        function clearInputField() {
-            youtubeUrlInput.value = '';
-            youtubeUrlInput.focus();
-        }
-        
-        // Estrae l'ID video da un URL di YouTube
+        // Estrae ID video da URL YouTube (per uso interno)
         function extractVideoId(url) {
             const patterns = [
                 /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\?\/]+)/,
@@ -693,7 +672,7 @@
             return null;
         }
         
-        // Estrae l'ID playlist da un URL di YouTube
+        // Estrae ID playlist
         function extractPlaylistId(url) {
             const patterns = [
                 /(?:youtube\.com\/playlist\?list=|&list=)([^&\?\/]+)/,
@@ -708,58 +687,51 @@
             return null;
         }
         
-        // Ottiene informazioni sul video usando l'API di oEmbed
-        async function getVideoInfo(videoId) {
-            try {
-                const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
-                const response = await fetch(oembedUrl);
-                
-                if (!response.ok) {
-                    throw new Error('Video non trovato');
+        // Inizializza AudioContext per iOS
+        function initAudioContextForiOS() {
+            if (!audioContext && window.AudioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    if (audioElement && audioContext) {
+                        mediaElementSource = audioContext.createMediaElementSource(audioElement);
+                        const gainNode = audioContext.createGain();
+                        
+                        mediaElementSource.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        gainNode.gain.value = volumeSlider.value / 100;
+                        
+                        volumeSlider.addEventListener('input', () => {
+                            if (gainNode) {
+                                gainNode.gain.value = volumeSlider.value / 100;
+                            }
+                        });
+                    }
+                    
+                    console.log('AudioContext inizializzato per iOS');
+                } catch (err) {
+                    console.error('Errore AudioContext:', err);
                 }
-                
-                const data = await response.json();
-                return {
-                    title: data.title,
-                    author: data.author_name,
-                    thumbnail: data.thumbnail_url
-                };
-            } catch (err) {
-                console.error('Errore nel recupero info video:', err);
-                // Fallback a informazioni di base
-                return {
-                    title: `Video YouTube (${videoId})`,
-                    author: "Canale YouTube",
-                    thumbnail: ''
-                };
             }
         }
         
-        // Ottiene informazioni sulla playlist
-        async function getPlaylistInfo(playlistId) {
-            try {
-                // Nota: Per una vera implementazione, servirebbe l'API di YouTube
-                // Per ora, simuliamo una playlist con video di esempio
-                return {
-                    title: "Playlist YouTube",
-                    videos: [
-                        { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up' },
-                        { id: 'JGwWNGJdvx8', title: 'Shape of You' },
-                        { id: 'kJQP7kiw5Fk', title: 'Despacito' },
-                        { id: '9bZkp7q19f0', title: 'Gangnam Style' }
-                    ]
-                };
-            } catch (err) {
-                console.error('Errore nel recupero info playlist:', err);
-                return null;
+        // Riprendi AudioContext
+        function resumeAudioContext() {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log('AudioContext ripreso');
+                }).catch(err => {
+                    console.error('Errore ripresa AudioContext:', err);
+                });
             }
         }
         
-        // Carica l'API YouTube
+        // Carica API YouTube (solo se necessario)
         function loadYouTubeAPI() {
             return new Promise((resolve) => {
-                if (window.YT && window.YT.Player) {
-                    resolve();
+                if (youtubeAPILoaded && window.YT && window.YT.Player) {
+                    resolve(true);
                     return;
                 }
                 
@@ -769,40 +741,32 @@
                 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
                 
                 window.onYouTubeIframeAPIReady = () => {
-                    resolve();
+                    youtubeAPILoaded = true;
+                    resolve(true);
                 };
                 
-                // Timeout di sicurezza
                 setTimeout(() => {
                     if (window.YT && window.YT.Player) {
-                        resolve();
+                        youtubeAPILoaded = true;
+                        resolve(true);
+                    } else {
+                        resolve(false);
                     }
                 }, 2000);
             });
         }
         
-        // Crea o aggiorna il player YouTube
-        async function createOrUpdateYouTubePlayer(videoId) {
+        // Riproduce video YouTube tramite iframe nascosto
+        async function playYouTubeVideo(videoId) {
             return new Promise((resolve, reject) => {
-                // Se il player esiste già, cambia solo il video
-                if (youtubePlayer && youtubePlayer.loadVideoById) {
-                    youtubePlayer.loadVideoById(videoId);
-                    youtubePlayer.playVideo();
-                    
-                    // Aggiorna lo stato
-                    isPlaying = true;
-                    playPauseIcon.className = 'fas fa-pause';
-                    
-                    resolve(youtubePlayer);
-                    return;
-                }
+                // Crea un iframe nascosto per YouTube
+                const iframeContainer = document.createElement('div');
+                iframeContainer.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0.01;pointer-events:none;overflow:hidden;';
+                document.body.appendChild(iframeContainer);
                 
-                // Altrimenti crea un nuovo player
-                youtubePlayerContainer.innerHTML = '';
-                
-                youtubePlayer = new YT.Player('youtubePlayerContainer', {
-                    height: '100%',
-                    width: '100%',
+                youtubePlayer = new YT.Player(iframeContainer, {
+                    height: '1',
+                    width: '1',
                     videoId: videoId,
                     playerVars: {
                         'autoplay': 1,
@@ -819,63 +783,84 @@
                     },
                     events: {
                         'onReady': (event) => {
-                            console.log('Player YouTube pronto');
+                            console.log('Player YouTube pronto (nascosto)');
                             event.target.setVolume(parseInt(volumeSlider.value));
-                            videoDuration = event.target.getDuration();
                             resolve(event.target);
                         },
                         'onStateChange': (event) => {
-                            // Aggiorna lo stato di riproduzione
                             if (event.data === YT.PlayerState.PLAYING) {
                                 isPlaying = true;
                                 playPauseIcon.className = 'fas fa-pause';
                                 showSuccess('Audio in riproduzione! Puoi bloccare lo schermo.');
+                                initAudioContextForiOS();
                             } else if (event.data === YT.PlayerState.PAUSED) {
                                 isPlaying = false;
                                 playPauseIcon.className = 'fas fa-play';
                             } else if (event.data === YT.PlayerState.ENDED) {
                                 isPlaying = false;
                                 playPauseIcon.className = 'fas fa-play';
-                                
-                                // Se c'è una playlist, passa al prossimo video
-                                if (currentPlaylist && currentPlaylistIndex >= 0) {
-                                    playNextTrack();
-                                }
                             }
                         },
                         'onError': (error) => {
                             console.error('Errore player YouTube:', error);
-                            reject(new Error('Errore nel caricamento del video'));
+                            reject(new Error('Impossibile caricare il contenuto'));
                         }
                     }
                 });
                 
-                // Timeout di sicurezza
                 setTimeout(() => {
                     if (youtubePlayer && youtubePlayer.getDuration) {
                         resolve(youtubePlayer);
                     } else {
-                        reject(new Error('Timeout caricamento player'));
+                        reject(new Error('Timeout caricamento'));
                     }
                 }, 5000);
             });
         }
         
-        // Carica e riproduce il video (o playlist)
-        async function playAudio() {
-            const url = youtubeUrlInput.value.trim();
+        // Funzione per incollare dagli appunti
+        async function pasteFromClipboard() {
+            try {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText();
+                    videoUrlInput.value = text;
+                    showSuccess('Link incollato!');
+                } else {
+                    videoUrlInput.focus();
+                    document.execCommand('paste');
+                    showSuccess('Link incollato!');
+                }
+            } catch (err) {
+                console.error('Errore incolla:', err);
+                const pastedText = prompt('Incolla manualmente il link qui:');
+                if (pastedText) {
+                    videoUrlInput.value = pastedText;
+                    showSuccess('Link incollato!');
+                }
+            }
+        }
+        
+        // Pulisci campo input
+        function clearInputField() {
+            videoUrlInput.value = '';
+            videoUrlInput.focus();
+        }
+        
+        // Formatta il tempo
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+            
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+        
+        // Carica e riproduce
+        async function playMedia() {
+            const url = videoUrlInput.value.trim();
             
             if (!url) {
-                showError('Per favore, inserisci un URL di YouTube valido');
-                return;
-            }
-            
-            // Controlla se è una playlist
-            const playlistId = extractPlaylistId(url);
-            const videoId = extractVideoId(url);
-            
-            if (!playlistId && !videoId) {
-                showError('URL di YouTube non valido. Formati supportati:<br>• Video: youtube.com/watch?v=ID<br>• Playlist: youtube.com/playlist?list=ID');
+                showError('Per favore, inserisci un URL valido');
                 return;
             }
             
@@ -884,267 +869,326 @@
                 hideError();
                 hideSuccess();
                 
-                // Carica l'API YouTube se non è già caricata
-                await loadYouTubeAPI();
+                // Ferma riproduzione precedente
+                stopPlayback();
                 
-                if (playlistId) {
-                    // Gestione playlist
-                    await handlePlaylist(playlistId, videoId);
+                // Salva URL
+                currentUrl = url;
+                
+                // Estrai info (senza mostrare riferimenti a YouTube)
+                const urlInfo = extractUrlInfo(url);
+                isYouTube = urlInfo.isYouTube;
+                
+                // Aggiorna UI con info generiche
+                trackTitle.textContent = urlInfo.title;
+                sourceText.textContent = urlInfo.sourceName;
+                
+                if (isYouTube) {
+                    // Gestione YouTube (nascosta all'utente)
+                    const videoId = extractVideoId(url);
+                    if (!videoId) {
+                        throw new Error('Link non valido');
+                    }
+                    
+                    // Carica API YouTube
+                    const apiLoaded = await loadYouTubeAPI();
+                    if (!apiLoaded) {
+                        throw new Error('Impossibile caricare il player');
+                    }
+                    
+                    // Riproduce YouTube
+                    await playYouTubeVideo(videoId);
+                    
                 } else {
-                    // Gestione singolo video
-                    await handleSingleVideo(videoId);
+                    // Gestione altri contenuti
+                    audioElement = new Audio();
+                    audioElement.crossOrigin = "anonymous";
+                    audioElement.preload = "auto";
+                    audioElement.playsInline = true;
+                    audioElement.src = url;
+                    audioElement.volume = volumeSlider.value / 100;
+                    
+                    // Setup event listeners
+                    setupAudioElementEvents();
+                    
+                    // Avvia riproduzione
+                    await audioElement.play();
                 }
                 
-                // Mostra i controlli del player
+                // Mostra controlli
                 playerSection.classList.add('active');
-                
-                // Nascondi il player visivamente (solo audio)
-                hideVideoPlayer();
-                
+                bufferInfo.style.display = 'block';
                 showLoading(false);
+                
+                // Avvia aggiornamento UI
+                updateInterval = setInterval(updateProgressUI, 500);
                 
             } catch (err) {
                 console.error('Errore:', err);
-                showError(err.message || 'Impossibile caricare. Riprova.');
+                showError(err.message || 'Impossibile caricare. Riprova con un altro link.');
                 showLoading(false);
             }
         }
         
-        // Gestisce un singolo video
-        async function handleSingleVideo(videoId) {
-            // Nascondi info playlist
-            playlistInfo.classList.remove('active');
-            
-            // Salva l'ID video corrente
-            currentVideoId = videoId;
-            currentPlaylist = null;
-            currentPlaylistIndex = -1;
-            
-            // Ottieni informazioni sul video
-            const videoInfo = await getVideoInfo(videoId);
-            trackTitle.textContent = videoInfo.title;
-            trackChannel.innerHTML = `<i class="fas fa-user"></i> ${videoInfo.author}`;
-            
-            // Crea o aggiorna il player
-            await createOrUpdateYouTubePlayer(videoId);
-        }
-        
-        // Gestisce una playlist
-        async function handlePlaylist(playlistId, initialVideoId = null) {
-            // Ottieni informazioni sulla playlist
-            const playlistInfoData = await getPlaylistInfo(playlistId);
-            
-            if (!playlistInfoData) {
-                throw new Error('Impossibile caricare la playlist');
-            }
-            
-            // Salva la playlist
-            currentPlaylist = playlistInfoData;
-            playlistName.textContent = playlistInfoData.title;
-            
-            // Mostra info playlist
-            playlistInfo.classList.add('active');
-            
-            // Pulisci e popola la lista tracce
-            playlistTracks.innerHTML = '';
-            
-            currentPlaylist.videos.forEach((video, index) => {
-                const trackElement = document.createElement('div');
-                trackElement.className = 'playlist-track';
-                trackElement.dataset.index = index;
-                trackElement.dataset.videoId = video.id;
-                
-                trackElement.innerHTML = `
-                    <i class="fas fa-music"></i>
-                    <span>${index + 1}. ${video.title}</span>
-                `;
-                
-                trackElement.addEventListener('click', () => {
-                    playTrackFromPlaylist(index);
-                });
-                
-                playlistTracks.appendChild(trackElement);
+        // Setup eventi per elemento audio normale
+        function setupAudioElementEvents() {
+            audioElement.addEventListener('loadedmetadata', () => {
+                durationEl.textContent = formatTime(audioElement.duration);
             });
             
-            // Trova l'indice del video iniziale
-            let startIndex = 0;
-            if (initialVideoId) {
-                const foundIndex = currentPlaylist.videos.findIndex(v => v.id === initialVideoId);
-                if (foundIndex !== -1) {
-                    startIndex = foundIndex;
-                }
-            }
+            audioElement.addEventListener('timeupdate', updateProgressUI);
+            audioElement.addEventListener('progress', updateBufferInfo);
+            audioElement.addEventListener('ended', () => {
+                isPlaying = false;
+                playPauseIcon.className = 'fas fa-play';
+            });
             
-            // Riproduci il primo video della playlist
-            await playTrackFromPlaylist(startIndex);
+            audioElement.addEventListener('error', (e) => {
+                console.error('Errore audio:', e);
+                showError('Errore nel caricamento. Riprova.');
+            });
+            
+            audioElement.addEventListener('playing', () => {
+                isPlaying = true;
+                playPauseIcon.className = 'fas fa-pause';
+                showSuccess('Audio in riproduzione! Puoi bloccare lo schermo.');
+                initAudioContextForiOS();
+            });
+            
+            audioElement.addEventListener('pause', () => {
+                isPlaying = false;
+                playPauseIcon.className = 'fas fa-play';
+            });
         }
         
-        // Riproduce una traccia dalla playlist
-        async function playTrackFromPlaylist(index) {
-            if (!currentPlaylist || index < 0 || index >= currentPlaylist.videos.length) {
+        // Aggiorna UI progresso
+        function updateProgressUI() {
+            if (isSeeking) return;
+            
+            let currentTime = 0;
+            let duration = 0;
+            
+            if (isYouTube && youtubePlayer) {
+                try {
+                    currentTime = youtubePlayer.getCurrentTime();
+                    duration = youtubePlayer.getDuration();
+                } catch (e) {
+                    console.error('Errore aggiornamento YouTube:', e);
+                    return;
+                }
+            } else if (audioElement) {
+                currentTime = audioElement.currentTime;
+                duration = audioElement.duration || 0;
+            } else {
                 return;
             }
             
-            const video = currentPlaylist.videos[index];
-            currentPlaylistIndex = index;
-            
-            // Aggiorna lo stato visivo delle tracce
-            document.querySelectorAll('.playlist-track').forEach((track, i) => {
-                if (i === index) {
-                    track.classList.add('active');
-                } else {
-                    track.classList.remove('active');
-                }
-            });
-            
-            // Riproduci il video
-            await handleSingleVideo(video.id);
-            
-            // Scorri la traccia corrente nella vista
-            const activeTrack = document.querySelector(`.playlist-track[data-index="${index}"]`);
-            if (activeTrack) {
-                activeTrack.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (duration > 0) {
+                const progressPercent = (currentTime / duration) * 100;
+                progress.style.width = `${progressPercent}%`;
+                
+                const progressBarWidth = progressBar.offsetWidth;
+                const handlePosition = (progressPercent / 100) * progressBarWidth;
+                progressHandle.style.left = `${handlePosition}px`;
+                
+                currentTimeEl.textContent = formatTime(currentTime);
+                durationEl.textContent = formatTime(duration);
             }
         }
         
-        // Riproduce la traccia precedente nella playlist
-        function playPrevTrack() {
-            if (!currentPlaylist || currentPlaylistIndex <= 0) return;
+        // Aggiorna info buffer
+        function updateBufferInfo() {
+            if (!audioElement || isYouTube) return;
             
-            playTrackFromPlaylist(currentPlaylistIndex - 1);
+            try {
+                if (audioElement.buffered.length > 0) {
+                    const bufferedEnd = audioElement.buffered.end(audioElement.buffered.length - 1);
+                    const duration = audioElement.duration || 1;
+                    const percent = Math.min(100, (bufferedEnd / duration) * 100);
+                    
+                    bufferPercent.textContent = `${Math.round(percent)}%`;
+                    bufferProgress.style.width = `${percent}%`;
+                    
+                    if (percent >= 100) {
+                        bufferText.textContent = 'Buffer completo - pronto per riproduzione offline';
+                    } else if (percent > 50) {
+                        bufferText.textContent = 'Buffer sufficiente per riproduzione';
+                    } else {
+                        bufferText.textContent = `Buffering... ${Math.round(percent)}%`;
+                    }
+                }
+            } catch (err) {
+                console.error('Errore buffer:', err);
+            }
         }
         
-        // Riproduce la traccia successiva nella playlist
-        function playNextTrack() {
-            if (!currentPlaylist || currentPlaylistIndex >= currentPlaylist.videos.length - 1) return;
-            
-            playTrackFromPlaylist(currentPlaylistIndex + 1);
+        // Setup barra progresso
+        function setupProgressBar() {
+            progressBar.addEventListener('click', (e) => {
+                if (isSeeking) return;
+                
+                let duration = 0;
+                if (isYouTube && youtubePlayer) {
+                    duration = youtubePlayer.getDuration();
+                } else if (audioElement) {
+                    duration = audioElement.duration;
+                } else {
+                    return;
+                }
+                
+                if (!duration || duration <= 0) return;
+                
+                const rect = progressBar.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const width = rect.width;
+                const percentage = clickX / width;
+                const seekTime = percentage * duration;
+                
+                isSeeking = true;
+                
+                if (isYouTube && youtubePlayer) {
+                    youtubePlayer.seekTo(seekTime, true);
+                } else if (audioElement) {
+                    audioElement.currentTime = seekTime;
+                }
+                
+                updateProgressUI();
+                
+                setTimeout(() => {
+                    isSeeking = false;
+                }, 100);
+            });
         }
         
-        // Cambia video senza riavviare l'app
-        async function changeVideo() {
-            // Mostra il campo input se nascosto
+        // Play/Pause
+        function togglePlayPause() {
+            if (isYouTube && youtubePlayer) {
+                if (isPlaying) {
+                    youtubePlayer.pauseVideo();
+                    isPlaying = false;
+                    playPauseIcon.className = 'fas fa-play';
+                } else {
+                    youtubePlayer.playVideo();
+                    isPlaying = true;
+                    playPauseIcon.className = 'fas fa-pause';
+                    resumeAudioContext();
+                }
+            } else if (audioElement) {
+                if (isPlaying) {
+                    audioElement.pause();
+                    isPlaying = false;
+                    playPauseIcon.className = 'fas fa-play';
+                } else {
+                    audioElement.play();
+                    isPlaying = true;
+                    playPauseIcon.className = 'fas fa-pause';
+                    resumeAudioContext();
+                }
+            }
+        }
+        
+        // Skip back/forward
+        function skipBack() {
+            if (isYouTube && youtubePlayer) {
+                const currentTime = youtubePlayer.getCurrentTime();
+                youtubePlayer.seekTo(Math.max(0, currentTime - 10), true);
+            } else if (audioElement) {
+                audioElement.currentTime = Math.max(0, audioElement.currentTime - 10);
+            }
+            resumeAudioContext();
+        }
+        
+        function skipForward() {
+            if (isYouTube && youtubePlayer) {
+                const currentTime = youtubePlayer.getCurrentTime();
+                const duration = youtubePlayer.getDuration();
+                youtubePlayer.seekTo(Math.min(duration, currentTime + 10), true);
+            } else if (audioElement) {
+                const duration = audioElement.duration || Infinity;
+                audioElement.currentTime = Math.min(duration, audioElement.currentTime + 10);
+            }
+            resumeAudioContext();
+        }
+        
+        // Cambia contenuto
+        function changeVideo() {
             document.querySelector('.input-section').style.display = 'block';
-            youtubeUrlInput.focus();
+            videoUrlInput.focus();
             
-            // Se c'è un video in riproduzione, mettilo in pausa
-            if (youtubePlayer && isPlaying) {
-                youtubePlayer.pauseVideo();
-                isPlaying = false;
-                playPauseIcon.className = 'fas fa-play';
+            if ((isYouTube && youtubePlayer && isPlaying) || (audioElement && isPlaying)) {
+                togglePlayPause();
             }
             
             showSuccess('Incolla un nuovo link e premi "Riproduci"');
         }
         
-        // Nasconde il player video (per solo audio)
-        function hideVideoPlayer() {
-            youtubePlayerContainer.classList.remove('visible-player');
-            youtubePlayerContainer.classList.add('hidden-player');
-            isPlayerVisible = false;
-            togglePlayerBtn.innerHTML = '<i class="fas fa-eye"></i> Mostra Player';
-        }
-        
-        // Mostra il player video
-        function showVideoPlayer() {
-            youtubePlayerContainer.classList.remove('hidden-player');
-            youtubePlayerContainer.classList.add('visible-player');
-            isPlayerVisible = true;
-            togglePlayerBtn.innerHTML = '<i class="fas fa-eye-slash"></i> Nascondi Player';
-        }
-        
-        // Alterna visibilità del player
-        function togglePlayerVisibility() {
-            if (isPlayerVisible) {
-                hideVideoPlayer();
-            } else {
-                showVideoPlayer();
-            }
-        }
-        
-        // Mette in pausa/riprende la riproduzione
-        function togglePlayPause() {
-            if (!youtubePlayer) return;
-            
-            if (isPlaying) {
-                youtubePlayer.pauseVideo();
-                isPlaying = false;
-                playPauseIcon.className = 'fas fa-play';
-            } else {
-                youtubePlayer.playVideo();
-                isPlaying = true;
-                playPauseIcon.className = 'fas fa-pause';
-            }
-        }
-        
-        // Salta indietro di 10 secondi
-        function skipBack() {
-            if (!youtubePlayer) return;
-            
-            const currentTime = youtubePlayer.getCurrentTime();
-            youtubePlayer.seekTo(Math.max(0, currentTime - 10), true);
-        }
-        
-        // Salta avanti di 10 secondi
-        function skipForward() {
-            if (!youtubePlayer) return;
-            
-            const currentTime = youtubePlayer.getCurrentTime();
-            youtubePlayer.seekTo(Math.min(videoDuration, currentTime + 10), true);
-        }
-        
-        // Ferma completamente la riproduzione
+        // Stop riproduzione
         function stopPlayback() {
+            // Ferma YouTube
             if (youtubePlayer) {
-                youtubePlayer.stopVideo();
-                youtubePlayer.destroy();
+                try {
+                    youtubePlayer.stopVideo();
+                    youtubePlayer.destroy();
+                } catch (e) {
+                    console.error('Errore distruzione player YouTube:', e);
+                }
                 youtubePlayer = null;
             }
             
-            isPlaying = false;
-            playPauseIcon.className = 'fas fa-play';
-            currentVideoId = null;
-            currentPlaylist = null;
-            currentPlaylistIndex = -1;
+            // Ferma audio normale
+            if (audioElement) {
+                audioElement.pause();
+                audioElement.src = '';
+                audioElement = null;
+            }
             
-            // Nascondi il player e la playlist
+            // Pulizia
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+            
+            // Rimuovi iframe YouTube nascosti
+            document.querySelectorAll('[style*="opacity:0.01"][style*="pointer-events:none"]').forEach(el => {
+                if (el.innerHTML.includes('iframe')) el.remove();
+            });
+            
+            // Reset stato
+            isPlaying = false;
+            isYouTube = false;
+            playPauseIcon.className = 'fas fa-play';
+            progress.style.width = '0%';
+            currentTimeEl.textContent = '0:00';
+            durationEl.textContent = '0:00';
+            bufferPercent.textContent = '0%';
+            bufferProgress.style.width = '0%';
+            
             playerSection.classList.remove('active');
-            playlistInfo.classList.remove('active');
+            bufferInfo.style.display = 'none';
             hideSuccess();
         }
         
-        // Mostra/nascondi il loader
+        // Utility UI
         function showLoading(show) {
-            if (show) {
-                loading.classList.add('active');
-            } else {
-                loading.classList.remove('active');
-            }
+            loading.classList.toggle('active', show);
+            bufferStatus.textContent = show ? 'Preparazione...' : '';
         }
         
-        // Mostra un errore
         function showError(message) {
-            errorText.innerHTML = message;
+            errorText.textContent = message;
             error.classList.add('active');
         }
         
-        // Nascondi l'errore
         function hideError() {
             error.classList.remove('active');
         }
         
-        // Mostra un messaggio di successo
         function showSuccess(message) {
             successText.textContent = message;
             success.classList.add('active');
-            
-            // Nascondi dopo 5 secondi
-            setTimeout(() => {
-                success.classList.remove('active');
-            }, 5000);
+            setTimeout(() => success.classList.remove('active'), 5000);
         }
         
-        // Nascondi il messaggio di successo
         function hideSuccess() {
             success.classList.remove('active');
         }
@@ -1152,92 +1196,101 @@
         // Event Listeners
         pasteBtn.addEventListener('click', pasteFromClipboard);
         clearBtn.addEventListener('click', clearInputField);
-        playBtn.addEventListener('click', playAudio);
+        playBtn.addEventListener('click', playMedia);
         changeVideoBtn.addEventListener('click', changeVideo);
         stopBtn.addEventListener('click', stopPlayback);
         playPauseBtn.addEventListener('click', togglePlayPause);
         skipBackBtn.addEventListener('click', skipBack);
         skipForwardBtn.addEventListener('click', skipForward);
-        togglePlayerBtn.addEventListener('click', togglePlayerVisibility);
-        prevTrackBtn.addEventListener('click', playPrevTrack);
-        nextTrackBtn.addEventListener('click', playNextTrack);
         
         volumeSlider.addEventListener('input', () => {
-            if (youtubePlayer) {
+            if (isYouTube && youtubePlayer) {
                 youtubePlayer.setVolume(parseInt(volumeSlider.value));
+            } else if (audioElement) {
+                audioElement.volume = volumeSlider.value / 100;
             }
         });
         
-        // Permetti l'invio con Enter
-        youtubeUrlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                playAudio();
-            }
+        // Setup interazioni
+        setupProgressBar();
+        
+        // Enter per inviare
+        videoUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') playMedia();
         });
         
-        // Mostra un URL di esempio al focus
-        youtubeUrlInput.addEventListener('focus', () => {
-            if (!youtubeUrlInput.value) {
-                // Esempi di video che dovrebbero funzionare
-                const sampleVideos = [
-                    'https://www.youtube.com/watch?v=dQw4w9WgXcQ', // Rick Astley
-                    'https://www.youtube.com/watch?v=JGwWNGJdvx8', // Ed Sheeran
-                    'https://www.youtube.com/watch?v=kJQP7kiw5Fk', // Despacito
-                    'https://www.youtube.com/watch?v=9bZkp7q19f0', // Gangnam Style
-                    'https://www.youtube.com/watch?v=CduA0TULnow', // Lo-Fi hip hop
-                    'https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj' // Playlist esempio
+        // Esempio al focus
+        videoUrlInput.addEventListener('focus', () => {
+            if (!videoUrlInput.value) {
+                // Link di esempio generici (YouTube incluso ma non menzionato)
+                const sampleUrls = [
+                    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    'https://assets.codepen.io/4358584/audio-sample.mp3',
+                    'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
                 ];
-                
-                // Seleziona un video casuale per l'esempio
-                const randomVideo = sampleVideos[Math.floor(Math.random() * sampleVideos.length)];
-                youtubeUrlInput.value = randomVideo;
+                videoUrlInput.value = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
             }
         });
         
-        // Inizializza con un esempio
+        // Inizializzazione
         window.addEventListener('load', () => {
-            // Test di alcuni video popolari per dimostrazione
-            const sampleVideos = [
+            // Esempio iniziale
+            const sampleUrls = [
                 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-                'https://www.youtube.com/watch?v=JGwWNGJdvx8',
-                'https://www.youtube.com/watch?v=kJQP7kiw5Fk'
+                'https://assets.codepen.io/4358584/audio-sample.mp3'
             ];
+            videoUrlInput.value = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
             
-            // Seleziona un video casuale per l'esempio
-            const randomVideo = sampleVideos[Math.floor(Math.random() * sampleVideos.length)];
-            youtubeUrlInput.value = randomVideo;
-            
-            // Verifica se siamo in modalità standalone (app da Home Screen)
+            // Controlla se è app da Home Screen
             if (window.navigator.standalone === true) {
-                console.log('App eseguita da Home Screen - background audio abilitato');
-                showSuccess('App da Home Screen rilevata! Audio in background abilitato.');
-            } else {
-                console.log('Eseguito in browser - background audio limitato');
+                showSuccess('Modalità app attiva! Audio in background abilitato.');
             }
         });
         
-        // Gestione della riproduzione in background per iOS
+        // Gestione background per iOS
         document.addEventListener('visibilitychange', () => {
-            // Mantieni l'audio attivo anche quando la pagina non è visibile
-            if (document.hidden && youtubePlayer && isPlaying) {
-                console.log('Pagina nascosta, audio dovrebbe continuare in background');
+            if (document.hidden) {
+                console.log('App in background - mantenendo audio');
+                resumeAudioContext();
+                
+                // Forza riproduzione se si era interrotta
+                if (isPlaying) {
+                    setTimeout(() => {
+                        if (isYouTube && youtubePlayer && youtubePlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+                            youtubePlayer.playVideo();
+                        } else if (audioElement && audioElement.paused) {
+                            audioElement.play().catch(e => console.log('Auto-play:', e));
+                        }
+                    }, 100);
+                }
             }
         });
         
-        // Informazioni per l'utente
-        console.log('YouTube Audio Player (Versione Migliorata) caricato');
-        console.log('Funzionalità aggiunte:');
-        console.log('1. Tasto incolla automatico');
-        console.log('2. Cambio video senza riavvio');
-        console.log('3. Supporto playlist');
+        // Eventi iOS
+        document.addEventListener('pause', () => {
+            if (isPlaying) {
+                setTimeout(() => {
+                    if (isYouTube && youtubePlayer && youtubePlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+                        youtubePlayer.playVideo();
+                    } else if (audioElement && audioElement.paused) {
+                        audioElement.play().catch(e => console.log('Auto-play iOS:', e));
+                    }
+                }, 100);
+            }
+        }, false);
         
-        // Funzione per aggiungere alla Home Screen (facilitazione)
+        // Mantieni audio attivo
+        document.addEventListener('touchend', resumeAudioContext);
+        document.addEventListener('click', resumeAudioContext);
+        
+        console.log('Audio Stream Player pronto');
+        
+        // Prompt per Home Screen
         function showAddToHomeScreenPrompt() {
             if (window.navigator.standalone !== true && 
                 /iPad|iPhone|iPod/.test(navigator.userAgent) && 
                 !window.MSStream) {
                 
-                // Mostra un prompt dopo 3 secondi
                 setTimeout(() => {
                     const addPrompt = confirm(
                         'PER AUDIO IN BACKGROUND SU IPHONE:\n\n' +
@@ -1248,7 +1301,6 @@
                     );
                     
                     if (addPrompt) {
-                        // Scrolla alle istruzioni
                         document.querySelector('.instructions').scrollIntoView({ 
                             behavior: 'smooth' 
                         });
@@ -1257,7 +1309,6 @@
             }
         }
         
-        // Mostra il prompt dopo il caricamento
         window.addEventListener('load', showAddToHomeScreenPrompt);
     </script>
 </body>
