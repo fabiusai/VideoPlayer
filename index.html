@@ -583,7 +583,7 @@
                 <div class="footer">
             <p>Audio Stream Player con supporto riproduzione in background</p>
             <p>Funziona solo se aggiunta alla Home Screen su iPhone</p>
-            <div class="version-label">Versione 2.1.0</div>
+            <div class="version-label">Versione 2.1.1</div>
         </div>
     </div>
 
@@ -865,13 +865,16 @@
             }
         }
         
-        // Riproduce video YouTube
+                // Riproduce video YouTube
         async function playYouTubeVideo(videoId) {
             return new Promise(async (resolve, reject) => {
                 try {
                     // Ottieni il titolo del video
                     currentVideoTitle = await getYouTubeVideoTitle(videoId);
                     trackTitle.textContent = currentVideoTitle;
+                    
+                    // Attiva Media Session per controllo iOS
+                    activateMediaSession();
                     
                     // Crea iframe nascosto per YouTube
                     const iframeContainer = document.createElement('div');
@@ -900,6 +903,22 @@
                                 console.log('Player YouTube pronto');
                                 event.target.setVolume(parseInt(volumeSlider.value));
                                 simulateYouTubeBuffer(); // Avvia simulazione buffer
+                                
+                                // Aggiorna Media Session con info video
+                                if ('mediaSession' in navigator) {
+                                    navigator.mediaSession.metadata = new MediaMetadata({
+                                        title: currentVideoTitle,
+                                        artist: 'YouTube',
+                                        album: 'Audio Stream',
+                                        artwork: [
+                                            { src: `https://img.youtube.com/vi/${videoId}/0.jpg`, sizes: '96x96', type: 'image/jpeg' },
+                                            { src: `https://img.youtube.com/vi/${videoId}/0.jpg`, sizes: '128x128', type: 'image/jpeg' },
+                                            { src: `https://img.youtube.com/vi/${videoId}/0.jpg`, sizes: '192x192', type: 'image/jpeg' },
+                                            { src: `https://img.youtube.com/vi/${videoId}/0.jpg`, sizes: '256x256', type: 'image/jpeg' },
+                                        ]
+                                    });
+                                }
+                                
                                 resolve(event.target);
                             },
                             'onStateChange': (event) => {
@@ -908,12 +927,23 @@
                                     playPauseIcon.className = 'fas fa-pause';
                                     showSuccess('Audio in riproduzione! Puoi bloccare lo schermo.');
                                     initAudioContextForiOS();
+                                    
+                                    // Aggiorna stato Media Session
+                                    if ('mediaSession' in navigator) {
+                                        navigator.mediaSession.playbackState = 'playing';
+                                    }
                                 } else if (event.data === YT.PlayerState.PAUSED) {
                                     isPlaying = false;
                                     playPauseIcon.className = 'fas fa-play';
+                                    if ('mediaSession' in navigator) {
+                                        navigator.mediaSession.playbackState = 'paused';
+                                    }
                                 } else if (event.data === YT.PlayerState.ENDED) {
                                     isPlaying = false;
                                     playPauseIcon.className = 'fas fa-play';
+                                    if ('mediaSession' in navigator) {
+                                        navigator.mediaSession.playbackState = 'none';
+                                    }
                                 } else if (event.data === YT.PlayerState.BUFFERING) {
                                     // Aggiorna stato buffer quando YouTube è in buffering
                                     bufferText.textContent = 'Buffering in corso...';
@@ -1331,7 +1361,7 @@
             if (e.key === 'Enter') playMedia();
         });
         
-        // Esempio al focus
+                // Esempio al focus
         videoUrlInput.addEventListener('focus', () => {
             if (!videoUrlInput.value) {
                 const sampleUrls = [
@@ -1342,6 +1372,45 @@
                 videoUrlInput.value = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
             }
         });
+        
+        // Forza l'app come Media Session attiva
+        function activateMediaSession() {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: 'Audio Stream Player',
+                    artist: 'Streaming Audio',
+                    album: 'Background Audio Player',
+                    artwork: [
+                        { src: 'video_player_ico.png', sizes: '96x96', type: 'image/png' },
+                        { src: 'video_player_ico.png', sizes: '128x128', type: 'image/png' },
+                        { src: 'video_player_ico.png', sizes: '192x192', type: 'image/png' },
+                        { src: 'video_player_ico.png', sizes: '256x256', type: 'image/png' },
+                    ]
+                });
+                
+                navigator.mediaSession.setActionHandler('play', () => {
+                    togglePlayPause();
+                });
+                
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    togglePlayPause();
+                });
+                
+                navigator.mediaSession.setActionHandler('stop', () => {
+                    stopPlayback();
+                });
+                
+                navigator.mediaSession.setActionHandler('seekbackward', () => {
+                    skipBack();
+                });
+                
+                navigator.mediaSession.setActionHandler('seekforward', () => {
+                    skipForward();
+                });
+                
+                console.log('Media Session attivata');
+            }
+        }
         
         // Inizializzazione
         window.addEventListener('load', () => {
