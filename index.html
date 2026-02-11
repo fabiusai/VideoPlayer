@@ -621,9 +621,31 @@
         let currentVideoTitle = '';
         let bufferSimulationInterval = null;
         
-        // Gestione background audio per iOS
+                // Gestione background audio per iOS
         let audioContext = null;
         let mediaElementSource = null;
+        let wakeLock = null;
+        
+        // Richiedi Wake Lock per prevenire la sospensione
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock attivo');
+                } catch (err) {
+                    console.error('Wake Lock fallito:', err);
+                }
+            }
+        }
+        
+        // Rilascia Wake Lock
+        async function releaseWakeLock() {
+            if (wakeLock) {
+                await wakeLock.release();
+                wakeLock = null;
+                console.log('Wake Lock rilasciato');
+            }
+        }
         
         // Estrae informazioni dal link
         function extractUrlInfo(url) {
@@ -1323,11 +1345,14 @@
             }
         });
         
-        // Gestione background per iOS
+                // Gestione background per iOS
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 console.log('App in background - mantenendo audio');
                 resumeAudioContext();
+                
+                // Richiedi Wake Lock quando va in background
+                requestWakeLock();
                 
                 if (isPlaying) {
                     setTimeout(() => {
@@ -1338,6 +1363,9 @@
                         }
                     }, 100);
                 }
+            } else {
+                // Rilascia Wake Lock quando torna in primo piano
+                releaseWakeLock();
             }
         });
         
