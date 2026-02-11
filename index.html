@@ -583,7 +583,7 @@
                 <div class="footer">
             <p>Audio Stream Player con supporto riproduzione in background</p>
             <p>Funziona solo se aggiunta alla Home Screen su iPhone</p>
-            <div class="version-label">Versione 2.1.1</div>
+            <div class="version-label">Versione 2.1.21</div>
         </div>
     </div>
 
@@ -1092,16 +1092,38 @@
             }
         }
         
-        // Setup eventi per elemento audio normale
+                // Setup eventi per elemento audio normale
         function setupAudioElementEvents() {
             audioElement.addEventListener('loadedmetadata', () => {
                 durationEl.textContent = formatTime(audioElement.duration);
+                
+                // Attiva Media Session per controllo iOS
+                activateMediaSession();
+                
+                // Aggiorna Media Session con info audio
+                if ('mediaSession' in navigator) {
+                    const fileName = currentUrl.split('/').pop().split('?')[0];
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: fileName || 'Audio Stream',
+                        artist: 'Audio Player',
+                        album: 'Background Audio',
+                        artwork: [
+                            { src: 'video_player_ico.png', sizes: '96x96', type: 'image/png' },
+                            { src: 'video_player_ico.png', sizes: '128x128', type: 'image/png' },
+                            { src: 'video_player_ico.png', sizes: '192x192', type: 'image/png' },
+                            { src: 'video_player_ico.png', sizes: '256x256', type: 'image/png' },
+                        ]
+                    });
+                }
             });
             
             audioElement.addEventListener('timeupdate', updateProgressUI);
             audioElement.addEventListener('ended', () => {
                 isPlaying = false;
                 playPauseIcon.className = 'fas fa-play';
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.playbackState = 'none';
+                }
             });
             
             audioElement.addEventListener('error', (e) => {
@@ -1114,12 +1136,39 @@
                 playPauseIcon.className = 'fas fa-pause';
                 showSuccess('Audio in riproduzione! Puoi bloccare lo schermo.');
                 initAudioContextForiOS();
+                
+                // Aggiorna stato Media Session
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.playbackState = 'playing';
+                }
+                
+                // Forza l'audio a rimanere attivo per iOS
+                forceAudioActive();
             });
             
             audioElement.addEventListener('pause', () => {
                 isPlaying = false;
                 playPauseIcon.className = 'fas fa-play';
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.playbackState = 'paused';
+                }
             });
+        }
+        
+        // Forza l'audio a rimanere attivo (workaround iOS)
+        function forceAudioActive() {
+            if (audioElement) {
+                // Imposta volume molto basso ma non zero per mantenere attiva la sessione
+                const silentAudio = new Audio();
+                silentAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
+                silentAudio.loop = true;
+                silentAudio.volume = 0.0001;
+                
+                // Avvia l'audio silenzioso in background
+                silentAudio.play().catch(e => console.log('Silent audio:', e));
+                
+                console.log('Forzata attivazione audio per iOS');
+            }
         }
         
         // Aggiorna UI progresso
@@ -1412,7 +1461,7 @@
             }
         }
         
-        // Inizializzazione
+                // Inizializzazione
         window.addEventListener('load', () => {
             const sampleUrls = [
                 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -1423,7 +1472,42 @@
             if (window.navigator.standalone === true) {
                 showSuccess('Modalità app attiva! Audio in background abilitato.');
             }
+            
+            // Setup globale per prevenire la chiusura dell'app
+            setupBackgroundAudioProtection();
         });
+        
+        // Protezione per audio in background su iOS
+        function setupBackgroundAudioProtection() {
+            // Intercetta eventi di sospensione
+            document.addEventListener('freeze', () => {
+                console.log('App in freeze - mantieni audio');
+                if (isPlaying) {
+                    // Riprendi immediatamente l'audio
+                    setTimeout(() => {
+                        if (audioElement && audioElement.paused) {
+                            audioElement.play().catch(e => console.log('Auto-resume on freeze:', e));
+                        }
+                    }, 50);
+                }
+            });
+            
+            // Mantieni l'audio sempre attivo
+            setInterval(() => {
+                if (isPlaying && document.hidden) {
+                    // Controlla e ripristina l'audio se necessario
+                    if (audioElement && audioElement.paused) {
+                        console.log('Audio fermato, riprendo...');
+                        audioElement.play().catch(e => console.log('Background resume:', e));
+                    }
+                    
+                    // Rinnova periodicamente l'AudioContext
+                    resumeAudioContext();
+                }
+            }, 3000); // Ogni 3 secondi
+            
+            console.log('Protezione audio in background attivata');
+        }
         
                 // Gestione background per iOS
         document.addEventListener('visibilitychange', () => {
